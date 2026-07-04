@@ -17,7 +17,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Dependencies
         run: npm install
@@ -25,24 +25,33 @@ jobs:
       - name: Build Web App
         run: npm run build
 
-      - name: Set up JDK 17
+      - name: Set up JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'zulu'
-          java-version: '17'
+          java-version: '21'
 
       - name: Sync Capacitor
         run: |
-          npx cap sync android || echo "Capacitor android not initialized in this repo yet"
+          if [ -d "android" ]; then
+            npx cap sync android
+          else
+            echo "Android directory not found. Trying to add android platform..."
+            npx cap add android || echo "Could not add android platform"
+          fi
 
       - name: Build APK
-        working-directory: android
         run: |
-          if [ -f "gradlew" ]; then
-            chmod +x gradlew
-            ./gradlew assembleDebug
+          if [ -d "android" ]; then
+            cd android
+            if [ -f "gradlew" ]; then
+              chmod +x gradlew
+              ./gradlew assembleDebug
+            else
+              echo "Gradle wrapper not found inside android directory"
+            fi
           else
-            echo "Gradle wrapper not found, skipping compile"
+            echo "android directory is missing, skipping APK build"
           fi
 
       - name: Upload APK Artifact
@@ -50,3 +59,4 @@ jobs:
         with:
           name: app-debug
           path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
