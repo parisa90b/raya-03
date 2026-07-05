@@ -1,0 +1,8 @@
+{
+  "name": "تقویم کسب و کار رایا",
+  "description": "سیستم برنامه‌ریزی استراتژیک، ماتریس آیزنهاور، ردیاب عادت‌ها و دستیار توسعه تجاری با هوش مصنوعی",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

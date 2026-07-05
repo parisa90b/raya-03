@@ -1,0 +1,62 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Dependencies
+        run: npm install
+
+      - name: Build Web App
+        run: npm run build
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'zulu'
+          java-version: '21'
+
+      - name: Sync Capacitor
+        run: |
+          if [ -d "android" ]; then
+            npx cap sync android
+          else
+            echo "Android directory not found. Trying to add android platform..."
+            npx cap add android || echo "Could not add android platform"
+          fi
+
+      - name: Build APK
+        run: |
+          if [ -d "android" ]; then
+            cd android
+            if [ -f "gradlew" ]; then
+              chmod +x gradlew
+              ./gradlew assembleDebug
+            else
+              echo "Gradle wrapper not found inside android directory"
+            fi
+          else
+            echo "android directory is missing, skipping APK build"
+          fi
+
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: warn
